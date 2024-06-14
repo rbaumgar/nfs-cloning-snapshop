@@ -13,7 +13,24 @@ cd csi-driver-nfs
 ## Create a storageclass
 
 ```shell
-oc apply -f examples/storageclass-nfs.yaml
+kubectl apply -f examples/storageclass-nfs.yaml
+```
+
+Check csidriver
+
+```shell
+kubectl get csidriver  nfs.csi.k8s.io -o json | jq .spec
+{
+  "attachRequired": false,
+  "fsGroupPolicy": "File",
+  "podInfoOnMount": false,
+  "requiresRepublish": false,
+  "seLinuxMount": false,
+  "storageCapacity": false,
+  "volumeLifecycleModes": [
+    "Persistent"
+  ]
+}
 ```
 
 ## Patch the storageProfile
@@ -23,26 +40,26 @@ When default cloneStrategy = snapshot following error may occur:
 `persistentvolumeclaims "tmp-pvc-3d603a8c-ea6e-4fb7-9a01-de5420735f93" is forbidden: only dynamically provisioned pvc can be resized and the storageclass that provisions the pvc must support resize`
 
 ```shell
-oc patch storageProfile nfs-csi-storage --type=json -p='[ { "op": "add", "path": "/spec", 
+kubectl patch storageProfile nfs-csi-storage --type=json -p='[ { "op": "add", "path": "/spec", 
          "value": { "cloneStrategy": "csi-clone" } } ]'
 ```
 
 ## Create a project
 
 ```shell
-oc new-project backup
+kubectl new-project backup
 ```
 
 ## Create a PVC
 
 ```shell
-oc apply -f examples/pvc-nfs.yaml
+kubectl apply -f examples/pvc-nfs.yaml
 ```
 
 ## Create a pod
 
 ```shell
-oc apply -f examples/pod-nginx-nfs.yaml
+kubectl apply -f examples/pod-nginx-nfs.yaml
 ```
 
 ## Check the log
@@ -61,7 +78,7 @@ Fri May 6 10:27:26 UTC 2024
 Make sure the application is not writing data to source NFS share.
 
 ```shell
-oc apply -f examples/pvc-nfs-cloning.yaml
+kubectl apply -f examples/pvc-nfs-cloning.yaml
 ```
 
 ## Check cloned PVC
@@ -97,7 +114,7 @@ Events:
 ## Create a pod based on the cloned PVC
 
 ```shell
-oc apply -f examples/pod-nginx-cloning.yaml
+kubectl apply -f examples/pod-nginx-cloning.yaml
 ```
 
 ## Check the log that it is continuing after the snapshot
@@ -123,21 +140,18 @@ You will find the logs going until 10:39:18 UTC. And then the log starts again i
 Snapshot is supported by the CSI NFS driver from v4.3.0.
 
 ```shell
-oc apply -f examples/snapshotclass-nfs.yaml
+kubectl apply -f examples/snapshotclass-nfs.yaml
 ```
 
 ## Create a VolumeSnapshot
 
 ```shell
-oc apply -f examples/volumesnapshot-nfs.yaml
+kubectl apply -f examples/volumesnapshot-nfs.yaml
 ```
 
 ## Check the VolumeSnapshot
 
 ```shell
-kubectl get volumesnapshot pvc-nfs-snapshot -o jsonpath={.status.readyToUse}
-true
-
 kubectl describe volumesnapshot pvc-nfs-snapshot
 Name:         pvc-nfs-snapshot
 Namespace:    backup
@@ -164,14 +178,17 @@ Events:
   Type    Reason            Age   From                 Message
   ----    ------            ----  ----                 -------
   Normal  CreatingSnapshot  7s    snapshot-controller  Waiting for a snapshot backup/pvc-nfs-snapshot to be created by the CSI driver.
+
+kubectl get volumesnapshot pvc-nfs-snapshot -o jsonpath={.status.readyToUse}
+true
 ```
 
 ## Create a new PVC based on the snapshot
 
 ```shell
-oc apply -f examples/pvc-nfs-snapshot-restored.yaml
+kubectl apply -f examples/pvc-nfs-snapshot-restored.yaml
 
-oc get pvc pvc-nfs-snapshot-restored 
+kubectl get pvc pvc-nfs-snapshot-restored 
 NAME                        STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS      AGE
 pvc-nfs-snapshot-restored   Bound    pvc-793dbe69-0dc1-4c95-a141-886d63a947e4   10Gi       RWX            nfs-csi-storage   42s
 ```
@@ -179,7 +196,7 @@ pvc-nfs-snapshot-restored   Bound    pvc-793dbe69-0dc1-4c95-a141-886d63a947e4   
 ## Create a pod based on the snapshot
 
 ```shell
-oc apply -f examples/pod-nginx-snapshot-restored.yaml
+kubectl apply -f examples/pod-nginx-snapshot-restored.yaml
 ```
 
 ## Check the log that it is continuing after the snapshot
