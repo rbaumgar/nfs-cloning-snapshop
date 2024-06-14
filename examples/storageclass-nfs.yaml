@@ -1,0 +1,15 @@
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: nfs-csi-storage
+  annotations:
+    storageclass.kubernetes.io/is-default-class: 'true'
+    storageclass.kubevirt.io/is-default-virt-class: 'true'
+provisioner: nfs.csi.k8s.io
+parameters:
+  server: 192.168.50.1
+  share: /var/lib/libvirt/images/ocp4-pv-nfs-csi
+reclaimPolicy: Delete
+mountOptions:
+  - nfsvers=4.1
+volumeBindingMode: Immediate
