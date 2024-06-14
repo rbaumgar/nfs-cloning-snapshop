@@ -54,12 +54,14 @@ kubectl new-project backup
 
 ```shell
 kubectl apply -f examples/pvc-nfs.yaml
+persistentvolumeclaim/pvc-nfs created
 ```
 
 ## Create a pod
 
 ```shell
 kubectl apply -f examples/pod-nginx-nfs.yaml
+pod/nginx-nfs created
 ```
 
 ## Check the log
@@ -79,6 +81,7 @@ Make sure the application is not writing data to source NFS share.
 
 ```shell
 kubectl apply -f examples/pvc-nfs-cloning.yaml
+persistentvolumeclaim/pvc-nfs-cloning created
 ```
 
 ## Check cloned PVC
@@ -115,6 +118,7 @@ Events:
 
 ```shell
 kubectl apply -f examples/pod-nginx-cloning.yaml
+pod/nginx-nfs-cloning created
 ```
 
 ## Check the log that it is continuing after the snapshot
@@ -141,12 +145,14 @@ Snapshot is supported by the CSI NFS driver from v4.3.0.
 
 ```shell
 kubectl apply -f examples/snapshotclass-nfs.yaml
+volumesnapshotclass.snapshot.storage.k8s.io/nfs-csi-snapshot configured
 ```
 
 ## Create a VolumeSnapshot
 
 ```shell
 kubectl apply -f examples/volumesnapshot-nfs.yaml
+volumesnapshot.snapshot.storage.k8s.io/pvc-nfs-snapshot created
 ```
 
 ## Check the VolumeSnapshot
@@ -173,11 +179,13 @@ Spec:
   Volume Snapshot Class Name:      nfs-csi-snapclass
 Status:
   Bound Volume Snapshot Content Name:  snapcontent-08a5fb25-b11f-408e-a8e3-7ddb3f055628
-  Ready To Use:                        false
+  Ready To Use:                        true
 Events:
   Type    Reason            Age   From                 Message
   ----    ------            ----  ----                 -------
   Normal  CreatingSnapshot  7s    snapshot-controller  Waiting for a snapshot backup/pvc-nfs-snapshot to be created by the CSI driver.
+  Normal   SnapshotCreated         20s    snapshot-controller  Snapshot backup/pvc-nfs-snapshot was successfully created by the CSI driver.
+  Normal   SnapshotReady           20s    snapshot-controller  Snapshot backup/pvc-nfs-snapshot is ready to use.
 
 kubectl get volumesnapshot pvc-nfs-snapshot -o jsonpath={.status.readyToUse}
 true
@@ -187,8 +195,9 @@ true
 
 ```shell
 kubectl apply -f examples/pvc-nfs-snapshot-restored.yaml
+persistentvolumeclaim/pvc-nfs-snapshot-restored created
 
-kubectl get pvc pvc-nfs-snapshot-restored 
+kubectl get pvc pvc-nfs-snapshot-restored
 NAME                        STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS      AGE
 pvc-nfs-snapshot-restored   Bound    pvc-793dbe69-0dc1-4c95-a141-886d63a947e4   10Gi       RWX            nfs-csi-storage   42s
 ```
@@ -197,6 +206,7 @@ pvc-nfs-snapshot-restored   Bound    pvc-793dbe69-0dc1-4c95-a141-886d63a947e4   
 
 ```shell
 kubectl apply -f examples/pod-nginx-snapshot-restored.yaml
+pod/nginx-nfs-restored-snapshot created
 ```
 
 ## Check the log that it is continuing after the snapshot
@@ -227,5 +237,6 @@ kubectl get volumesnapshot pvc-nfs-snapshot -o jsonpath={.metadata.creationTimes
 ## Cleanup
 
 ```shell
-oc  delete project backup
+kubectl delete project backup
+project.project.openshift.io "backup" deleted
 ```

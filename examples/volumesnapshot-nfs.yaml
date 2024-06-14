@@ -3,6 +3,6 @@ kind: VolumeSnapshot
 metadata:
   name: pvc-nfs-snapshot
 spec:
-  volumeSnapshotClassName: nfs-csi-snapclass
+  volumeSnapshotClassName: nfs-csi-snapshot
   source:
     persistentVolumeClaimName: pvc-nfs
